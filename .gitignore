@@ -1,0 +1,8 @@
+# 依賴套件 (絕對不能上傳)
+node_modules/
+
+# Mac 系統隱藏檔
+.DS_Store
+
+# Tailwind 本地端編譯的暫存檔 (因為我們會讓 Cloudflare 雲端自己編譯)
+public/tailwind-built.css
