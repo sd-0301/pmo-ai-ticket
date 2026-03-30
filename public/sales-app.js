@@ -1,4 +1,4 @@
-// --- 🛡️ 企業級架構：指向專屬 Worker 中介層，前端不帶 Token ---
+
 const WORKER_BASE_URL = 'https://pmo-ai-ticket.sd-574.workers.dev';
 const SALES_QUERY_WEBHOOK = `${WORKER_BASE_URL}/api/query`;
 const DOWNLOAD_WEBHOOK = `${WORKER_BASE_URL}/api/download`;
@@ -14,7 +14,7 @@ let currentQueryResults = [];
 let currentQueryTourCode = '';
 let pdfCache = {}; 
 
-// --- 安全 DOM 工具函式 ---
+// 🌟 安全 DOM 工具函式 (取代 innerHTML)
 function cloneTemplate(templateId) {
     const template = document.getElementById(templateId);
     return template.content.cloneNode(true);
@@ -84,9 +84,24 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 // --- Sales 端極速查詢 ---
 document.getElementById('startSalesProcess').addEventListener('click', async () => {
     const tourCode = document.getElementById('salesTourCode').value.toUpperCase().trim();
-    const names = document.getElementById('salesPassengerName').value.toUpperCase().trim();
+    
+    let rawNames = document.getElementById('salesPassengerName').value.toUpperCase();
+    rawNames = rawNames.replace(/\s+/g, '');
+    rawNames = rawNames.replace(/^,+|,+$/g, '');
+    const names = rawNames;
     
     if (!tourCode || !names) return alert('請務必輸入「查詢團號」與「旅客英文姓名」。');
+
+    if (/[^A-Z/,]/.test(names)) {
+        return alert("檢查到錯誤符號，如：~!@#$%^&*()_-=+[]{}:;<>?'|.，請移除。");
+    }
+
+    const nameArray = names.split(',');
+    const isValidNames = nameArray.every(n => n.includes('/') && !n.startsWith('/') && !n.endsWith('/'));
+    
+    if (!isValidNames) {
+        return alert('每位旅客請輸入正確英文姓名，英文姓與英文名請以「/」區隔，多筆姓名請以「,」區隔，符號皆為半形。範例：PAN/WUNJIAN');
+    }
 
     resultsCard.classList.remove('hidden');
     resultsCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -99,7 +114,7 @@ document.getElementById('startSalesProcess').addEventListener('click', async () 
     try {
         const res = await fetch(SALES_QUERY_WEBHOOK, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' }, // Worker 會自動注入 Token
             body: JSON.stringify({ 
                 tourCode, passengerNames: names, type: "Query", 
                 empId: window.getEmpId(), Time: window.getClientTime() 

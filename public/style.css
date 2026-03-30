@@ -1,18 +1,9 @@
 /* 基礎字體設定 */
-body { 
-    font-family: 'Noto Sans TC', sans-serif; 
-}
+body { font-family: 'Noto Sans TC', sans-serif; }
 
 /* 上傳區塊互動樣式 */
-.upload-area { 
-    border: 2px dashed #cbd5e1; 
-    transition: all 0.3s; 
-    position: relative; 
-}
-.upload-area.dragover { 
-    border-color: #3b82f6; 
-    background-color: #eff6ff; 
-}
+.upload-area { border: 2px dashed #cbd5e1; transition: all 0.3s; position: relative; }
+.upload-area.dragover { border-color: #3b82f6; background-color: #eff6ff; }
 
 /* 骨架屏載入動畫 */
 .loading-shimmer {
@@ -20,26 +11,17 @@ body {
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
 }
-@keyframes shimmer { 
-    0% { background-position: 200% 0; } 
-    100% { background-position: -200% 0; } 
-}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* 進場與彈出動畫 */
-.animate-in { 
-    animation: slideUp 0.4s ease-out forwards; 
-}
-@keyframes slideUp { 
-    from { opacity: 0; transform: translateY(10px); } 
-    to { opacity: 1; transform: translateY(0); } 
-}
+.animate-in { animation: slideUp 0.4s ease-out forwards; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
 @keyframes popIn {
     0% { opacity: 0; transform: scale(0.95) translateY(10px); }
     100% { opacity: 1; transform: scale(1) translateY(0); }
 }
-.animate-pop-in { 
-    animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-}
+.animate-pop-in { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 /* 自訂卷軸 */
 #fileList::-webkit-scrollbar { width: 4px; }
@@ -47,18 +29,11 @@ body {
 #fileList::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 
 /* 狀態遮罩層模糊效果 */
-.status-overlay, .backdrop-blur-sm { 
-    backdrop-filter: blur(4px); 
-}
+.status-overlay, .backdrop-blur-sm { backdrop-filter: blur(4px); }
 
-/* 複製提示小圖示互動 */
-.copy-hint { 
-    opacity: 0; 
-    transition: opacity 0.2s; 
-}
-.copy-target:hover .copy-hint { 
-    opacity: 1; 
-}
+/* 複製提示互動 */
+.copy-hint { opacity: 0; transition: opacity 0.2s; }
+.copy-target:hover .copy-hint { opacity: 1; }
 
 /* OP版 Radio Button 自訂樣式 */
 input[type="radio"]:checked + div {
@@ -67,7 +42,5 @@ input[type="radio"]:checked + div {
     color: #4338ca;
 }
 
-/* 隱藏原生模版標籤 (以防舊版瀏覽器顯示) */
-template {
-    display: none;
-}
+/* 徹底隱藏原生模版標籤  */
+template { display: none; }

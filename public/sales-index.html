@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可樂旅遊 - AI 小票根 (Sales版V1.0)</title>
+    <title>可樂旅遊 - AI 小票根 (Sales版)</title>
     <meta name="robots" content="noindex, nofollow">
     
-    <!-- 🛡️ 嚴格 CSP：新增了 pmo-ai-ticket.sd-574.workers.dev，移除 unsafe-inline -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self'; 
         script-src 'self' https://unpkg.com https://cdnjs.cloudflare.com; 
@@ -25,11 +24,9 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
-    <!-- 員工編號遮罩 -->
     <div id="empAuthOverlay" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm px-4 transition-opacity duration-300">
         <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl animate-pop-in relative overflow-hidden border border-white">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-100 blur-3xl rounded-full opacity-60 pointer-events-none"></div>
-            
             <div class="relative z-10">
                 <div class="flex items-center justify-center gap-4 w-full">
                     <div class="bg-indigo-600 p-3 rounded-2xl shadow-xl shadow-indigo-100 shrink-0">
@@ -61,9 +58,7 @@
         </div>
     </div>
 
-    <!-- 主內容 -->
     <div id="mainAppContent" class="max-w-[1400px] mx-auto py-10 px-6 transition-all duration-300 opacity-30 pointer-events-none">
-        <!-- Header -->
         <div class="flex items-center justify-between mb-10 max-w-3xl mx-auto">
             <div class="flex items-center gap-4">
                 <div class="bg-indigo-600 p-3 rounded-2xl shadow-xl shadow-indigo-100">
@@ -76,7 +71,6 @@
             </div>
         </div>
 
-        <!-- 查詢區塊 (置中設計) -->
         <div class="max-w-3xl mx-auto mb-10">
             <div id="salesCard" class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 p-8 border border-white flex flex-col relative overflow-hidden">
                 <div class="absolute -top-10 -right-10 w-40 h-40 bg-teal-100 blur-3xl rounded-full opacity-50 pointer-events-none"></div>
@@ -93,11 +87,10 @@
                         <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">查詢團號 (必填)</label>
                         <input type="text" id="salesTourCode" placeholder="EEC011109CI6" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-teal-100 transition-all font-bold text-slate-800 tracking-widest text-lg uppercase text-nowrap">
                     </div>
-                    
                     <div>
                         <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">旅客英文姓名 (必填，可多筆)</label>
                         <textarea id="salesPassengerName" rows="3" placeholder="PAN/WUNWUN,PAN/JIANJIAN" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-teal-100 transition-all font-bold text-slate-800 tracking-widest text-lg uppercase resize-none"></textarea>
-                        <p class="mt-2 text-[10px] text-teal-600 font-medium italic">* 英文姓與英文名請以「/」區隔，多筆姓名請以「,」區隔，符號皆為半形</p>
+                        <p class="mt-2 text-[16px] text-teal-600 font-medium italic">* 英文姓與英文名請以「/」區隔，多筆姓名請以「,」區隔，符號皆為半形，範例：PAN/WUNWUN,PAN/JIANJIAN</p>
                     </div>
                 </div>
 
@@ -110,7 +103,6 @@
             </div>
         </div>
 
-        <!-- 下方解析明細版位 -->
         <div class="flex justify-center w-full">
             <div id="resultsCard" class="hidden w-full max-w-7xl bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 overflow-hidden border border-white animate-in mx-auto">
                 <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
@@ -152,10 +144,9 @@
         </div>
     </div>
 
-    <!-- 狀態遮罩 -->
     <div id="statusOverlay" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-900/60 status-overlay px-4">
         <div class="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl text-center">
-            <div id="statusIconContainer" class="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center bg-indigo-50 text-indigo-500">
+            <div id="statusIconContainer" class="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center bg-teal-50 text-teal-600">
                 <i id="statusIconElement" data-lucide="loader-2" class="w-10 h-10 animate-spin"></i>
             </div>
             <h2 id="statusTitle" class="text-2xl font-black text-slate-800 mb-2">處理中</h2>
@@ -164,12 +155,8 @@
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-3 rounded-full text-xs font-black shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest">
-        已複製到剪貼簿
-    </div>
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-3 rounded-full text-xs font-black shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest">已複製到剪貼簿</div>
 
-    <!-- 🌟 XSS 防禦機制：DOM 模板區塊 🌟 -->
     <template id="skeletonRowTemplate">
         <tr class="shimmer-row">
             <td class="px-10 py-7"><div class="h-4 w-16 loading-shimmer rounded-lg"></div></td>
@@ -177,7 +164,7 @@
             <td class="px-10 py-7 text-center"><div class="h-4 w-32 loading-shimmer rounded-lg mx-auto"></div></td>
             <td class="px-10 py-7 text-center"><div class="h-4 w-20 loading-shimmer rounded-lg mx-auto"></div></td>
             <td class="px-10 py-7"><div class="h-4 w-20 loading-shimmer rounded-lg"></div></td>
-            <td class="px-10 py-7 text-center"><div class="h-4 w-16 loading-shimmer rounded-lg mx-auto"></div></td>
+            <td class="px-8 py-7 text-center"><div class="h-4 w-24 loading-shimmer rounded-lg mx-auto"></div></td>
         </tr>
     </template>
 
@@ -200,7 +187,6 @@
         </tr>
     </template>
 
-    <!-- 獨立的 JS 核心邏輯 -->
     <script src="sales-app.js"></script>
 </body>
 </html>

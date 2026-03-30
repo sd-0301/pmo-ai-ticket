@@ -1,10 +1,9 @@
-// --- 🛡️ 企業級架構：指向專屬 Worker 中介層，前端不帶 Token ---
+
 const WORKER_BASE_URL = 'https://pmo-ai-ticket.sd-574.workers.dev';
 const OP_UPLOAD_WEBHOOK = `${WORKER_BASE_URL}/api/upload`;
 const SALES_QUERY_WEBHOOK = `${WORKER_BASE_URL}/api/query`;
 const DOWNLOAD_WEBHOOK = `${WORKER_BASE_URL}/api/download`;
 
-// --- 初始化與 DOM 節點 ---
 lucide.createIcons();
 
 const AIRLINE_RULES = {
@@ -33,7 +32,7 @@ let currentQueryTourCode = '';
 let pdfCache = {}; 
 let matchedAirlineName = ''; 
 
-// --- 安全 DOM 工具函式 ---
+// 🌟 安全 DOM 工具函式 (取代 innerHTML)
 function cloneTemplate(templateId) {
     const template = document.getElementById(templateId);
     return template.content.cloneNode(true);
@@ -57,7 +56,7 @@ function copyToClipboard(text) {
     showToast(`已複製: ${text}`); 
 }
 
-// 安全替換 innerHTML 的狀態渲染
+// 狀態遮罩控制 (安全 DOM 寫法)
 function showStatus(type, title, desc) {
     const overlay = document.getElementById('statusOverlay');
     overlay.classList.remove('hidden');
@@ -95,9 +94,7 @@ document.getElementById('statusBtn').addEventListener('click', () => {
     overlay.classList.remove('flex');
 });
 
-document.getElementById('reloadBtn').addEventListener('click', () => {
-    window.location.reload();
-});
+document.getElementById('reloadBtn').addEventListener('click', () => { window.location.reload(); });
 
 // --- 航司與檔案上傳邏輯 ---
 opTourInput.addEventListener('input', (e) => {
@@ -147,11 +144,9 @@ function handleFiles(files) {
 // 模板化重構：100% 防止檔名 XSS
 function renderFileList() {
     fileList.textContent = '';
-    
     if (selectedFiles.length > 0) {
         document.getElementById('idleState').classList.add('hidden');
         fileList.classList.remove('hidden');
-        
         fileCountBadge.textContent = `共 ${selectedFiles.length} 個檔案`;
         fileCountBadge.classList.remove('hidden');
 
@@ -169,7 +164,7 @@ function renderFileList() {
     }
 }
 
-// 事件代理刪除檔案
+// 事件代理：刪除檔案
 fileList.addEventListener('click', (e) => {
     const removeBtn = e.target.closest('.remove-file-btn');
     if (removeBtn) {
@@ -180,7 +175,7 @@ fileList.addEventListener('click', (e) => {
     }
 });
 
-// --- Flow 1: OP 端上傳 (保留延遲與分流邏輯) ---
+// --- Flow 1: OP 端上傳 ---
 startOpBtn.addEventListener('click', async () => {
     const tourCode = opTourInput.value.toUpperCase().trim();
     const ticketTypeRadio = document.querySelector('input[name="ticketType"]:checked');
@@ -217,7 +212,6 @@ startOpBtn.addEventListener('click', async () => {
                 body: formData // Worker 會自動注入 Token
             });
             if (!res.ok) throw new Error('上傳觸發失敗');
-            
             showStatus('success', '任務已提交', `檔案已上傳！AI 正在背景依照 ${ticketType} 格式進行精準解析。業務人員可於2分鐘後進行查詢。`);
 
         } else {
@@ -239,23 +233,14 @@ startOpBtn.addEventListener('click', async () => {
                 formData.append('empId', window.getEmpId());
                 formData.append('Time', window.getClientTime());
 
-                const res = await fetch(OP_UPLOAD_WEBHOOK, { 
-                    method: 'POST', 
-                    body: formData 
-                });
-                
+                const res = await fetch(OP_UPLOAD_WEBHOOK, { method: 'POST', body: formData });
                 if (!res.ok) throw new Error(`第 ${i + 1} 份檔案上傳失敗`);
 
-                if (i < totalFiles - 1) {
-                    await delay(45000); 
-                }
+                if (i < totalFiles - 1) { await delay(45000); }
             }
             showStatus('success', '全數上傳完成', `全數 ${totalFiles} 份檔案已上傳完畢！\nAI 已完成背景解析，業務人員可於2分鐘後進行查詢。`);
         }
-        
-        selectedFiles = []; renderFileList(); opTourInput.value = '';
-        ticketTypeRadio.checked = false; 
-        
+        selectedFiles = []; renderFileList(); opTourInput.value = ''; ticketTypeRadio.checked = false; 
     } catch (err) {
         showStatus('error', '處理異常', err.message);
     }
@@ -264,30 +249,38 @@ startOpBtn.addEventListener('click', async () => {
 // --- Flow 2: Sales 端查詢 ---
 document.getElementById('startSalesProcess').addEventListener('click', async () => {
     const tourCode = document.getElementById('salesTourCode').value.toUpperCase().trim();
-    const names = document.getElementById('salesPassengerName').value.toUpperCase().trim();
+    
+    // 套用您嚴謹的旅客姓名驗證邏輯
+    let rawNames = document.getElementById('salesPassengerName').value.toUpperCase();
+    rawNames = rawNames.replace(/\s+/g, '');
+    rawNames = rawNames.replace(/^,+|,+$/g, '');
+    const names = rawNames;
     
     if (!tourCode || !names) return alert('請務必輸入「查詢團號」與「旅客英文姓名」。');
+
+    if (/[^A-Z/,]/.test(names)) {
+        return alert("檢查到錯誤符號，如：~!@#$%^&*()_-=+[]{}:;<>?'|.，請移除。");
+    }
+
+    const nameArray = names.split(',');
+    const isValidNames = nameArray.every(n => n.includes('/') && !n.startsWith('/') && !n.endsWith('/'));
+    
+    if (!isValidNames) {
+        return alert('每位旅客請輸入正確英文姓名，英文姓與英文名請以「/」區隔，多筆姓名請以「,」區隔，符號皆為半形。範例：PAN/WUNJIAN');
+    }
 
     resultsCard.classList.remove('hidden');
     resultsCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
     // 安全繪製骨架屏
     resultTableBody.textContent = '';
-    for(let i=0; i<3; i++) {
-        resultTableBody.appendChild(cloneTemplate('skeletonRowTemplate'));
-    }
+    for(let i=0; i<3; i++) { resultTableBody.appendChild(cloneTemplate('skeletonRowTemplate')); }
 
     try {
         const res = await fetch(SALES_QUERY_WEBHOOK, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                tourCode, 
-                passengerNames: names, 
-                type: "Query", 
-                empId: window.getEmpId(),
-                Time: window.getClientTime() 
-            })
+            headers: { 'Content-Type': 'application/json' }, // Worker 會注入 Token
+            body: JSON.stringify({ tourCode, passengerNames: names, type: "Query", empId: window.getEmpId(), Time: window.getClientTime() })
         });
 
         const textData = await res.text();
@@ -306,6 +299,7 @@ document.getElementById('startSalesProcess').addEventListener('click', async () 
 
         renderResults(resultsArr, tourCode);
     } catch (err) {
+        // 安全建構錯誤 DOM
         resultTableBody.textContent = '';
         const tr = document.createElement('tr');
         const td = document.createElement('td');
@@ -366,6 +360,7 @@ function renderResults(results, tourCode) {
         trNode.querySelector('.tpl-pnr').textContent = rPnr;
         trNode.querySelector('.tpl-airline').textContent = rAirline;
 
+        // 綁定資料屬性供 Event Delegation 使用
         trNode.querySelectorAll('.copy-target')[0].setAttribute('data-copy', rTicket);
         trNode.querySelectorAll('.copy-target')[1].setAttribute('data-copy', rPnr);
 
