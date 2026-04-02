@@ -29,7 +29,7 @@ body { font-family: 'Noto Sans TC', sans-serif; }
 #fileList::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 
 /* 狀態遮罩層模糊效果 */
-.status-overlay, .backdrop-blur-sm { backdrop-filter: blur(4px); }
+.status-overlay, .backdrop-blur-sm, .blur-bg { backdrop-filter: blur(4px); }
 
 /* 複製提示互動 */
 .copy-hint { opacity: 0; transition: opacity 0.2s; }
@@ -42,5 +42,5 @@ input[type="radio"]:checked + div {
     color: #4338ca;
 }
 
-/* 徹底隱藏原生模版標籤  */
+/* 徹底隱藏原生模版標籤 (資安防護) */
 template { display: none; }

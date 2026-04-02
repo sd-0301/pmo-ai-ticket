@@ -32,7 +32,7 @@ let currentQueryTourCode = '';
 let pdfCache = {}; 
 let matchedAirlineName = ''; 
 
-// 🌟 安全 DOM 工具函式 (取代 innerHTML)
+
 function cloneTemplate(templateId) {
     const template = document.getElementById(templateId);
     return template.content.cloneNode(true);
@@ -56,7 +56,7 @@ function copyToClipboard(text) {
     showToast(`已複製: ${text}`); 
 }
 
-// 狀態遮罩控制 (安全 DOM 寫法)
+
 function showStatus(type, title, desc) {
     const overlay = document.getElementById('statusOverlay');
     overlay.classList.remove('hidden');
@@ -96,7 +96,7 @@ document.getElementById('statusBtn').addEventListener('click', () => {
 
 document.getElementById('reloadBtn').addEventListener('click', () => { window.location.reload(); });
 
-// --- 航司與檔案上傳邏輯 ---
+
 opTourInput.addEventListener('input', (e) => {
     const val = e.target.value.toUpperCase();
     let found = false;
@@ -110,7 +110,7 @@ opTourInput.addEventListener('input', (e) => {
     }
     if (!found) {
         airlineTag.textContent = '待輸入團號自動判斷航司';
-        airlineTag.className = 'mt-2 text-[10px] font-bold text-slate-400 flex items-center gap-1 h-3';
+        airlineTag.className = 'mt-2 text-[10px] font-bold text-slate-300 flex items-center gap-1 h-3';
         matchedAirlineName = '';
     }
 });
@@ -134,14 +134,14 @@ function handleFiles(files) {
         } else { hasInvalidFormat = true; }
     });
 
-    if (hasInvalidFormat) alert('請確認上傳的檔案格式，系統僅支援 PDF 檔。');
+    if (hasInvalidFormat) alert('請確認上傳的檔案格式，功能僅支援 PDF 檔。');
     if (validPdfFiles.length > 0) {
         selectedFiles = [...selectedFiles, ...validPdfFiles];
         renderFileList();
     }
 }
 
-// 模板化重構：100% 防止檔名 XSS
+
 function renderFileList() {
     fileList.textContent = '';
     if (selectedFiles.length > 0) {
@@ -164,7 +164,7 @@ function renderFileList() {
     }
 }
 
-// 事件代理：刪除檔案
+
 fileList.addEventListener('click', (e) => {
     const removeBtn = e.target.closest('.remove-file-btn');
     if (removeBtn) {
@@ -188,7 +188,7 @@ startOpBtn.addEventListener('click', async () => {
 
     try {
         if (isCIorJX && ticketType === 'Group') {
-            showStatus('processing', '背景歸檔與解析啟動中', `正在將 [團體票] 合併並送往雲端，後續將由 AI 自動路由解析...`);
+            showStatus('processing', '背景歸檔與解析啟動中', `正在將 [團體票] 合併並送往功能，後續將由 AI 自動路由解析...`);
 
             const mergedPdf = await PDFLib.PDFDocument.create();
             for (const f of selectedFiles) {
@@ -207,10 +207,7 @@ startOpBtn.addEventListener('click', async () => {
             formData.append('empId', window.getEmpId());
             formData.append('Time', window.getClientTime());
 
-            const res = await fetch(OP_UPLOAD_WEBHOOK, { 
-                method: 'POST', 
-                body: formData // Worker 會自動注入 Token
-            });
+            const res = await fetch(OP_UPLOAD_WEBHOOK, { method: 'POST', body: formData });
             if (!res.ok) throw new Error('上傳觸發失敗');
             showStatus('success', '任務已提交', `檔案已上傳！AI 正在背景依照 ${ticketType} 格式進行精準解析。業務人員可於2分鐘後進行查詢。`);
 
@@ -242,7 +239,9 @@ startOpBtn.addEventListener('click', async () => {
         }
         selectedFiles = []; renderFileList(); opTourInput.value = ''; ticketTypeRadio.checked = false; 
     } catch (err) {
-        showStatus('error', '處理異常', err.message);
+        let errorMsg = err.message;
+        if (errorMsg.includes('Failed to fetch')) errorMsg = '伺服器連線異常，請重新上傳所有檔案';
+        showStatus('error', '處理異常', errorMsg);
     }
 });
 
@@ -250,7 +249,7 @@ startOpBtn.addEventListener('click', async () => {
 document.getElementById('startSalesProcess').addEventListener('click', async () => {
     const tourCode = document.getElementById('salesTourCode').value.toUpperCase().trim();
     
-    // 套用您嚴謹的旅客姓名驗證邏輯
+    
     let rawNames = document.getElementById('salesPassengerName').value.toUpperCase();
     rawNames = rawNames.replace(/\s+/g, '');
     rawNames = rawNames.replace(/^,+|,+$/g, '');
@@ -272,14 +271,14 @@ document.getElementById('startSalesProcess').addEventListener('click', async () 
     resultsCard.classList.remove('hidden');
     resultsCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
-    // 安全繪製骨架屏
+   
     resultTableBody.textContent = '';
     for(let i=0; i<3; i++) { resultTableBody.appendChild(cloneTemplate('skeletonRowTemplate')); }
 
     try {
         const res = await fetch(SALES_QUERY_WEBHOOK, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, // Worker 會注入 Token
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tourCode, passengerNames: names, type: "Query", empId: window.getEmpId(), Time: window.getClientTime() })
         });
 
@@ -299,7 +298,6 @@ document.getElementById('startSalesProcess').addEventListener('click', async () 
 
         renderResults(resultsArr, tourCode);
     } catch (err) {
-        // 安全建構錯誤 DOM
         resultTableBody.textContent = '';
         const tr = document.createElement('tr');
         const td = document.createElement('td');
@@ -322,7 +320,6 @@ document.getElementById('startSalesProcess').addEventListener('click', async () 
     }
 });
 
-// 重構渲染表格邏輯
 function renderResults(results, tourCode) {
     currentQueryResults = results;
     currentQueryTourCode = tourCode;
@@ -334,7 +331,8 @@ function renderResults(results, tourCode) {
             const tType = r.ticketType || r.TicketType || 'Group';
             const isBrGroup = (airline.includes('EVA Air') || airline.includes('長榮') || airline.includes('BR')) && tType === 'Group';
             const isTkGroup = (airline.includes('Turkish Airlines') || airline.includes('土耳其') || airline.includes('TK')) && tType === 'Group';
-            return pageIdx && !isBrGroup && !isTkGroup;
+            const isEkGroup = (airline.includes('Emirates') || airline.includes('阿聯酋') || airline.includes('EK')) && tType === 'Group';
+            return pageIdx && !isBrGroup && !isTkGroup && !isEkGroup;
         });
         
         const canBatchDownload = validForBatch.length > 0;
@@ -360,15 +358,15 @@ function renderResults(results, tourCode) {
         trNode.querySelector('.tpl-pnr').textContent = rPnr;
         trNode.querySelector('.tpl-airline').textContent = rAirline;
 
-        // 綁定資料屬性供 Event Delegation 使用
         trNode.querySelectorAll('.copy-target')[0].setAttribute('data-copy', rTicket);
         trNode.querySelectorAll('.copy-target')[1].setAttribute('data-copy', rPnr);
 
         const downloadContainer = trNode.querySelector('.tpl-download-container');
         const isBrGroup = (rAirline.includes('EVA Air') || rAirline.includes('長榮') || rAirline.includes('BR')) && rType === 'Group';
         const isTkGroup = (rAirline.includes('Turkish Airlines') || rAirline.includes('土耳其') || rAirline.includes('TK')) && rType === 'Group';
+        const isEkGroup = (rAirline.includes('Emirates') || rAirline.includes('阿聯酋') || rAirline.includes('EK')) && rType === 'Group';
 
-        if (rPageIndex && !isBrGroup && !isTkGroup) {
+        if (rPageIndex && !isBrGroup && !isTkGroup && !isEkGroup) {
             const btn = document.createElement('button');
             btn.className = "download-single-btn whitespace-nowrap group flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-all text-[11px] font-black mx-auto shadow-sm";
             btn.setAttribute('data-tour', rTour);
@@ -396,7 +394,6 @@ function renderResults(results, tourCode) {
     lucide.createIcons();
 }
 
-// 統一的事件代理：複製與單檔下載
 resultTableBody.addEventListener('click', (e) => {
     const copyBtn = e.target.closest('.copy-target');
     if (copyBtn) copyToClipboard(copyBtn.getAttribute('data-copy'));
@@ -412,7 +409,6 @@ resultTableBody.addEventListener('click', (e) => {
     }
 });
 
-// 單筆下載邏輯
 async function downloadTicket(tourCode, passengerName, pageIndex, ticketType, pnr) {
     showStatus('processing', '機票擷取中', `正在拆解 ${passengerName} 的專屬機票，請稍候...`);
     try {
@@ -432,7 +428,7 @@ async function downloadTicket(tourCode, passengerName, pageIndex, ticketType, pn
             const res = await fetch(DOWNLOAD_WEBHOOK, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error('無法取得機票合併檔，請確認伺服器連線');
+            if (!res.ok) throw new Error('無法取得機票合併檔，請確認功能連線');
             mergedPdfBytes = await res.arrayBuffer();
             pdfCache[cacheKey] = mergedPdfBytes; 
         }
@@ -445,14 +441,14 @@ async function downloadTicket(tourCode, passengerName, pageIndex, ticketType, pn
             pdfDoc = await PDFLib.PDFDocument.load(bufferCopy);
         } catch (e) {
             delete pdfCache[cacheKey];
-            throw new Error('解析 PDF 失敗！請確認 n8n 下載節點回傳的是單一 PDF 檔案，而不是 JSON。');
+            throw new Error('解析 PDF 失敗！請確認功能回傳的是單一 PDF 檔案，而不是 JSON。');
         }
 
         const totalPages = pdfDoc.getPageCount();
         const targetPageIndex = parseInt(pageIndex) - 1;
         
         if (isNaN(targetPageIndex) || targetPageIndex < 0 || targetPageIndex >= totalPages) {
-            throw new Error(`裁切失敗：需要第 ${targetPageIndex + 1} 頁，但雲端檔案總共只有 ${totalPages} 頁。這代表 n8n 撈錯了檔案。`);
+            throw new Error(`裁切失敗：需要第 ${targetPageIndex + 1} 頁，但功能檔案總共只有 ${totalPages} 頁。這代表功能取得錯誤的檔案。`);
         }
 
         const newPdf = await PDFLib.PDFDocument.create();
@@ -478,7 +474,6 @@ async function downloadTicket(tourCode, passengerName, pageIndex, ticketType, pn
     }
 }
 
-// 批次打包 ZIP 下載邏輯
 if (batchDownloadBtn) {
     batchDownloadBtn.addEventListener('click', async () => {
         if (currentQueryResults.length === 0) return;
@@ -489,7 +484,8 @@ if (batchDownloadBtn) {
             const tType = r.ticketType || r.TicketType || 'Group';
             const isBrGroup = (airline.includes('EVA Air') || airline.includes('長榮') || airline.includes('BR')) && tType === 'Group';
             const isTkGroup = (airline.includes('Turkish Airlines') || airline.includes('土耳其') || airline.includes('TK')) && tType === 'Group';
-            return pageIdx && !isBrGroup && !isTkGroup;
+            const isEkGroup = (airline.includes('Emirates') || airline.includes('阿聯酋') || airline.includes('EK')) && tType === 'Group';
+            return pageIdx && !isBrGroup && !isTkGroup && !isEkGroup;
         });
         
         if (validPassengers.length === 0) return;
@@ -531,7 +527,7 @@ if (batchDownloadBtn) {
                     const res = await fetch(DOWNLOAD_WEBHOOK, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                     });
-                    if (!res.ok) throw new Error('無法取得票根合併檔，請確認伺服器連線');
+                    if (!res.ok) throw new Error('無法取得票根合併檔，請確認功能連線');
                     mergedPdfBytes = await res.arrayBuffer();
                     pdfCache[cacheKey] = mergedPdfBytes; 
                 }
@@ -544,7 +540,7 @@ if (batchDownloadBtn) {
                     safePdfDoc = await PDFLib.PDFDocument.load(bufferCopy);
                 } catch (e) {
                     delete pdfCache[cacheKey];
-                    throw new Error(`解析 PNR: ${pnr} 的 PDF 失敗！請確認 n8n 下載節點回傳正確檔案。`);
+                    throw new Error(`解析 PNR: ${pnr} 的 PDF 失敗！請確認功能回傳正確檔案。`);
                 }
 
                 const totalPages = safePdfDoc.getPageCount();
@@ -585,7 +581,6 @@ if (batchDownloadBtn) {
     });
 }
 
-// --- 員工編號與時間 Auth ---
 const EMP_SESSION_KEY = 'colatour_temp_emp_id';
 const empAuthOverlay = document.getElementById('empAuthOverlay');
 const empIdInput = document.getElementById('empIdInput');

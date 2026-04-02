@@ -14,7 +14,7 @@ let currentQueryResults = [];
 let currentQueryTourCode = '';
 let pdfCache = {}; 
 
-// 🌟 安全 DOM 工具函式 (取代 innerHTML)
+
 function cloneTemplate(templateId) {
     const template = document.getElementById(templateId);
     return template.content.cloneNode(true);
@@ -170,7 +170,8 @@ function renderResults(results, tourCode) {
             const tType = r.ticketType || r.TicketType || 'Group';
             const isBrGroup = (airline.includes('EVA Air') || airline.includes('長榮') || airline.includes('BR')) && tType === 'Group';
             const isTkGroup = (airline.includes('Turkish Airlines') || airline.includes('土耳其') || airline.includes('TK')) && tType === 'Group';
-            return pageIdx && !isBrGroup && !isTkGroup;
+            const isEkGroup = (airline.includes('Emirates') || airline.includes('阿聯酋') || airline.includes('EK')) && tType === 'Group';
+            return pageIdx && !isBrGroup && !isTkGroup && !isEkGroup;
         });
         
         const canBatchDownload = validForBatch.length > 0;
@@ -202,8 +203,9 @@ function renderResults(results, tourCode) {
         const downloadContainer = trNode.querySelector('.tpl-download-container');
         const isBrGroup = (rAirline.includes('EVA Air') || rAirline.includes('長榮') || rAirline.includes('BR')) && rType === 'Group';
         const isTkGroup = (rAirline.includes('Turkish Airlines') || rAirline.includes('土耳其') || rAirline.includes('TK')) && rType === 'Group';
+        const isEkGroup = (rAirline.includes('Emirates') || rAirline.includes('阿聯酋') || rAirline.includes('EK')) && rType === 'Group';
 
-        if (rPageIndex && !isBrGroup && !isTkGroup) {
+        if (rPageIndex && !isBrGroup && !isTkGroup && !isEkGroup) {
             const btn = document.createElement('button');
             btn.className = "download-single-btn whitespace-nowrap group flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-all text-[11px] font-black mx-auto shadow-sm";
             btn.setAttribute('data-tour', rTour);
@@ -278,7 +280,7 @@ async function downloadTicket(tourCode, passengerName, pageIndex, ticketType, pn
             pdfDoc = await PDFLib.PDFDocument.load(bufferCopy);
         } catch (e) {
             delete pdfCache[cacheKey];
-            throw new Error('解析 PDF 失敗！請確認 n8n 下載節點回傳的是單一 PDF 檔案，而不是 JSON。');
+            throw new Error('解析 PDF 失敗！請確認功能回傳的是單一 PDF 檔案，而不是 JSON。');
         }
 
         const totalPages = pdfDoc.getPageCount();
@@ -321,7 +323,8 @@ if (batchDownloadBtn) {
             const tType = r.ticketType || r.TicketType || 'Group';
             const isBrGroup = (airline.includes('EVA Air') || airline.includes('長榮') || airline.includes('BR')) && tType === 'Group';
             const isTkGroup = (airline.includes('Turkish Airlines') || airline.includes('土耳其') || airline.includes('TK')) && tType === 'Group';
-            return pageIdx && !isBrGroup && !isTkGroup;
+            const isEkGroup = (airline.includes('Emirates') || airline.includes('阿聯酋') || airline.includes('EK')) && tType === 'Group';
+            return pageIdx && !isBrGroup && !isTkGroup && !isEkGroup;
         });
         
         if (validPassengers.length === 0) return;
@@ -362,7 +365,7 @@ if (batchDownloadBtn) {
                     const res = await fetch(DOWNLOAD_WEBHOOK, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                     });
-                    if (!res.ok) throw new Error('無法取得票根合併檔，請確認伺服器連線');
+                    if (!res.ok) throw new Error('無法取得票根合併檔，請確認功能連線');
                     mergedPdfBytes = await res.arrayBuffer();
                     pdfCache[cacheKey] = mergedPdfBytes; 
                 }
@@ -375,7 +378,7 @@ if (batchDownloadBtn) {
                     safePdfDoc = await PDFLib.PDFDocument.load(bufferCopy);
                 } catch (e) {
                     delete pdfCache[cacheKey];
-                    throw new Error(`解析 PNR: ${pnr} 的 PDF 失敗！請確認 n8n 下載節點回傳正確檔案。`);
+                    throw new Error(`解析 PNR: ${pnr} 的 PDF 失敗！請確認功能回傳正確檔案。`);
                 }
 
                 const totalPages = safePdfDoc.getPageCount();
@@ -415,7 +418,7 @@ if (batchDownloadBtn) {
     });
 }
 
-// --- 員工編號 Auth ---
+
 const EMP_SESSION_KEY = 'colatour_temp_emp_id';
 const empAuthOverlay = document.getElementById('empAuthOverlay');
 const empIdInput = document.getElementById('empIdInput');
